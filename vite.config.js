@@ -10,7 +10,7 @@ export default defineConfig({
         host: true, // Слушать все локальные адреса
         strictPort: true,
         allowedHosts: [
-            'searches-cloth-width-prospect.trycloudflare.com', // Конкретно этот адрес
+            'explicitly-grande-definition-laugh.trycloudflare.com', // Конкретно этот адрес
             '.trycloudflare.com' // И вообще все поддомены trycloudflare.com на будущее
         ],
         hmr: {

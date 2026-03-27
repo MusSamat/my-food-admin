@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, UtensilsCrossed, FolderOpen, ShoppingBag, Building2, Ticket,
-         Printer, LogOut, ChefHat, Users} from 'lucide-react';
+         Printer, LogOut, ChefHat, Users, Settings} from 'lucide-react';
 import { clsx } from 'clsx';
 import useAuthStore from '../../stores/authStore';
 
@@ -13,6 +13,7 @@ const NAV = [
     { to: '/offices', icon: Building2, label: 'Офисы' },
     { to: '/promos', icon: Ticket, label: 'Промокоды' },
     { to: '/users', icon: Users, label: 'Пользователи' },
+    { to: '/settings', icon: Settings, label: 'Настройки' },
     { to: '/printer', icon: Printer, label: 'Принтер' },
 ];
 

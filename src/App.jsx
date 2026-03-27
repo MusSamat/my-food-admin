@@ -12,6 +12,7 @@ import PromosPage from './pages/PromosPage';
 import PrinterPage from './pages/PrinterPage';
 import { Spinner } from './components/ui';
 import UsersPage from "./pages/UsersPage";
+import SettingsPage from './pages/SettingsPage';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useAuthStore();
@@ -56,6 +57,7 @@ const App = () => {
                     <Route path="offices" element={<OfficesPage />} />
                     <Route path="promos" element={<PromosPage />} />
                     <Route path="users" element={<UsersPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
                     <Route path="printer" element={<PrinterPage />} />
                 </Route>
 
