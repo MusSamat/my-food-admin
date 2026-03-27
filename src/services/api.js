@@ -81,4 +81,16 @@ export const getStats = () => api.get('/admin/stats');
 export const getUsers = (params) => api.get('/admin/users', { params });
 export const getUserDetail = (id) => api.get(`/admin/users/${id}`);
 
+
+// ─── Branches ───
+export const getBranches = () => api.get('/admin/branches');
+export const createBranch = (data) => api.post('/admin/branches', data);
+export const updateBranch = (id, data) => api.put(`/admin/branches/${id}`, data);
+export const deleteBranch = (id) => api.delete(`/admin/branches/${id}`);
+export const getBranchOffices = (branchId) => api.get(`/admin/branches/${branchId}/offices`);
+export const createBranchOffice = (branchId, data) => api.post(`/admin/branches/${branchId}/offices`, data);
+export const deleteBranchOffice = (id) => api.delete(`/admin/branches/offices/${id}`);
+export const getBranchCategories = (branchId) => api.get(`/admin/branches/${branchId}/categories`);
+export const saveBranchCategories = (branchId, category_ids) => api.post(`/admin/branches/${branchId}/categories`, { category_ids });
+
 export default api;
