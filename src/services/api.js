@@ -5,14 +5,12 @@ const api = axios.create({
     timeout: 15000,
 });
 
-// Inject token
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('admin_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
 
-// Handle 401
 api.interceptors.response.use(
     (res) => res,
     (err) => {
@@ -36,12 +34,8 @@ export const deleteCategory = (id) => api.delete(`/admin/categories/${id}`);
 
 // ─── Items ───
 export const getItems = (params) => api.get('/admin/items', { params });
-export const createItem = (formData) => api.post('/admin/items', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-});
-export const updateItem = (id, formData) => api.put(`/admin/items/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-});
+export const createItem = (formData) => api.post('/admin/items', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateItem = (id, formData) => api.put(`/admin/items/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const deleteItem = (id) => api.delete(`/admin/items/${id}`);
 
 // ─── Orders ───
@@ -62,11 +56,11 @@ export const updatePromo = (id, data) => api.put(`/admin/promos/${id}`, data);
 export const deletePromo = (id) => api.delete(`/admin/promos/${id}`);
 
 // ─── Print ───
-// ─── Print (token в URL для открытия в новой вкладке) ───
 const getToken = () => localStorage.getItem('admin_token') || '';
 export const getKitchenReceipt = (id) => `/api/admin/orders/${id}/receipt/kitchen?token=${getToken()}`;
 export const getClientReceipt = (id) => `/api/admin/orders/${id}/receipt/client?token=${getToken()}`;
-export const getReceiptPDF = (id) => `/api/admin/orders/${id}/receipt/pdf?token=${getToken()}`;export const printKitchen = (id) => api.post(`/admin/orders/${id}/print/kitchen`);
+export const getReceiptPDF = (id) => `/api/admin/orders/${id}/receipt/pdf?token=${getToken()}`;
+export const printKitchen = (id) => api.post(`/admin/orders/${id}/print/kitchen`);
 export const printClient = (id) => api.post(`/admin/orders/${id}/print/client`);
 export const printTest = () => api.post('/admin/printer/test');
 
@@ -75,12 +69,11 @@ export const getPrinterSettings = () => api.get('/admin/settings/printer');
 export const savePrinterSettings = (data) => api.put('/admin/settings/printer', data);
 
 // ─── Stats ───
-export const getStats = () => api.get('/admin/stats');
+export const getStats = (params) => api.get('/admin/stats', { params });
 
-//users
+// ─── Users ───
 export const getUsers = (params) => api.get('/admin/users', { params });
 export const getUserDetail = (id) => api.get(`/admin/users/${id}`);
-
 
 // ─── Branches ───
 export const getBranches = () => api.get('/admin/branches');
@@ -91,6 +84,16 @@ export const getBranchOffices = (branchId) => api.get(`/admin/branches/${branchI
 export const createBranchOffice = (branchId, data) => api.post(`/admin/branches/${branchId}/offices`, data);
 export const deleteBranchOffice = (id) => api.delete(`/admin/branches/offices/${id}`);
 export const getBranchCategories = (branchId) => api.get(`/admin/branches/${branchId}/categories`);
-export const saveBranchCategories = (branchId, category_ids) => api.post(`/admin/branches/${branchId}/categories`, { category_ids });
+export const saveBranchCategories = (branchId, ids) => api.post(`/admin/branches/${branchId}/categories`, { category_ids: ids });
+
+// ─── Admins (operators) ───
+export const getAdmins = () => api.get('/admin/admins');
+export const createAdmin = (data) => api.post('/admin/admins', data);
+export const updateAdmin = (id, data) => api.put(`/admin/admins/${id}`, data);
+export const deleteAdmin = (id) => api.delete(`/admin/admins/${id}`);
+
+// ─── Branch item overrides ───
+export const getBranchOverrides = (branchId) => api.get(`/admin/branches/${branchId}/overrides`);
+export const saveBranchOverrides = (branchId, overrides) => api.put(`/admin/branches/${branchId}/overrides`, { overrides });
 
 export default api;

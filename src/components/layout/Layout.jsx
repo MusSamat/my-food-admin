@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, FolderOpen, ShoppingBag, Building2, Ticket,
-    Printer, LogOut, ChefHat, Users, Settings, GitBranch } from 'lucide-react';
+import {
+    LayoutDashboard, UtensilsCrossed, FolderOpen, ShoppingBag, Building2, Ticket,
+    Printer, LogOut, ChefHat, Users, Settings, GitBranch, UserCog
+} from 'lucide-react';
 import { clsx } from 'clsx';
 import useAuthStore from '../../stores/authStore';
 import useAdminBranchStore from '../../stores/branchStore';
@@ -16,6 +18,7 @@ const NAV = [
     { to: '/promos', icon: Ticket, label: 'Промокоды' },
     { to: '/users', icon: Users, label: 'Пользователи' },
     { to: '/branches', icon: GitBranch, label: 'Филиалы' },
+    { to: '/admins', icon: UserCog, label: 'Админы', superadminOnly: true },
     { to: '/settings', icon: Settings, label: 'Настройки' },
     { to: '/printer', icon: Printer, label: 'Принтер' },
 ];

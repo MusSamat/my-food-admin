@@ -3,16 +3,25 @@ import { ShoppingBag, TrendingUp, DollarSign, Clock, Flame } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { getStats } from '../services/api';
 import { StatCard, Spinner } from '../components/ui';
+import useAdminBranchStore from "../stores/branchStore";
+import useAuthStore from '../stores/authStore';
 
 const COLORS = ['#FF6B00', '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
 
 const DashboardPage = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { selectedBranchId } = useAdminBranchStore();
+    const { admin } = useAuthStore();
 
     useEffect(() => {
-        getStats().then(({ data }) => setStats(data.data)).finally(() => setLoading(false));
-    }, []);
+        setLoading(true);
+        const params = {};
+        if (admin?.role === 'superadmin' && selectedBranchId) {
+            params.branch_id = selectedBranchId;
+        }
+        getStats(params).then(({ data }) => setStats(data.data)).finally(() => setLoading(false));
+    }, [selectedBranchId, admin]);
 
     if (loading) return <Spinner />;
     if (!stats) return null;

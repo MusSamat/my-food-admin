@@ -4,14 +4,15 @@ import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 import { getBranches, createBranch, updateBranch, deleteBranch,
     getBranchOffices, createBranchOffice, deleteBranchOffice,
-    getBranchCategories, saveBranchCategories } from '../services/api';
+    getBranchCategories, saveBranchCategories, getBranchOverrides, saveBranchOverrides } from '../services/api';
 import { Modal, ConfirmDialog, Spinner, EmptyState } from '../components/ui';
 
 const EMPTY = {
     name: '', address: '', phone: '', lat: '', lng: '',
     working_hours_from: '10:00', working_hours_to: '23:00', is_24h: false,
     is_open: true, delivery_fee: 150, min_order_amount: 0,
-    morning_mode_enabled: false, sort_order: 0,
+    morning_mode_enabled: false, morning_hours_from: '07:00', morning_hours_to: '10:00',
+    sort_order: 0,
 };
 
 const BranchesPage = () => {
@@ -33,6 +34,11 @@ const BranchesPage = () => {
     const [categories, setCategories] = useState([]);
     const [linkedCats, setLinkedCats] = useState(new Set());
 
+    // Item overrides modal
+    const [overridesModal, setOverridesModal] = useState(null); // branch id
+    const [overrideItems, setOverrideItems] = useState([]);
+    const [savingOverrides, setSavingOverrides] = useState(false);
+
     const fetch = () => getBranches().then(({ data }) => setBranches(data.data)).finally(() => setLoading(false));
     useEffect(() => { fetch(); }, []);
 
@@ -45,7 +51,10 @@ const BranchesPage = () => {
             working_hours_from: b.working_hours_from, working_hours_to: b.working_hours_to,
             is_24h: b.is_24h, is_open: b.is_open,
             delivery_fee: b.delivery_fee, min_order_amount: b.min_order_amount,
-            morning_mode_enabled: b.morning_mode_enabled, sort_order: b.sort_order,
+            morning_mode_enabled: b.morning_mode_enabled,
+            morning_hours_from: b.morning_hours_from || '07:00',
+            morning_hours_to: b.morning_hours_to || '10:00',
+            sort_order: b.sort_order,
         });
         setFormOpen(true);
     };
@@ -60,6 +69,8 @@ const BranchesPage = () => {
                 min_order_amount: parseInt(form.min_order_amount) || 0,
                 lat: form.lat ? parseFloat(form.lat) : null,
                 lng: form.lng ? parseFloat(form.lng) : null,
+                morning_hours_from: form.morning_mode_enabled ? form.morning_hours_from : '07:00',
+                morning_hours_to: form.morning_mode_enabled ? form.morning_hours_to : '10:00',
             };
             if (editing) {
                 await updateBranch(editing.id, payload);
@@ -135,6 +146,35 @@ const BranchesPage = () => {
 
     const update = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
+    const openOverrides = async (branchId) => {
+        setOverridesModal(branchId);
+        const { data } = await getBranchOverrides(branchId);
+        setOverrideItems(data.data);
+    };
+
+    const updateOverride = (itemId, field, value) => {
+        setOverrideItems(prev => prev.map(item =>
+            item.item_id === itemId ? { ...item, [`override_${field}`]: value === '' ? null : value } : item
+        ));
+    };
+
+    const handleSaveOverrides = async () => {
+        setSavingOverrides(true);
+        try {
+            const overrides = overrideItems
+                .filter(i => i.override_price !== undefined || i.override_status !== undefined)
+                .map(i => ({
+                    item_id: i.item_id,
+                    price: i.override_price ? parseInt(i.override_price) : null,
+                    status: i.override_status || null,
+                }));
+            await saveBranchOverrides(overridesModal, overrides);
+            toast.success('Сохранено');
+            setOverridesModal(null);
+        } catch (err) { toast.error(err.response?.data?.message || 'Ошибка'); }
+        finally { setSavingOverrides(false); }
+    };
+
     return (
         <div>
             <div className="flex items-center justify-between mb-6">
@@ -179,6 +219,7 @@ const BranchesPage = () => {
                                 <button onClick={() => openEdit(b)} className="btn-ghost text-xs"><Pencil size={13} /> Изменить</button>
                                 <button onClick={() => openOffices(b.id)} className="btn-ghost text-xs"><Building2 size={13} /> Офисы</button>
                                 <button onClick={() => openCategories(b.id)} className="btn-ghost text-xs"><Check size={13} /> Категории</button>
+                                <button onClick={() => openOverrides(b.id)} className="btn-ghost text-xs"><Pencil size={13} /> Блюда</button>
                                 <button onClick={() => setDeleteId(b.id)} className="btn-ghost text-xs text-red-500 hover:bg-red-50"><Trash2 size={13} /></button>
                             </div>
                         </div>
@@ -231,11 +272,41 @@ const BranchesPage = () => {
                                    className="w-4 h-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
                             <span className="text-sm text-slate-600">Филиал открыт</span>
                         </label>
+
+
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={form.morning_mode_enabled} onChange={(e) => update('morning_mode_enabled', e.target.checked)}
                                    className="w-4 h-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
-                            <span className="text-sm text-slate-600">Утренний режим (07:00-10:00, бесплатная доставка, только офисы)</span>
+                            <span className="text-sm text-slate-600">Утренний режим (бесплатная доставка, только офисы)</span>
                         </label>
+
+                        {form.morning_mode_enabled && (
+                            <div className="ml-6 p-4 bg-amber-50 rounded-xl space-y-3">
+                                <p className="text-xs text-amber-700 font-medium">Часы утреннего режима</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1">
+                                        <label className="block text-xs text-amber-600 mb-1">С</label>
+                                        <select className="input h-9 text-sm" value={form.morning_hours_from || '07:00'}
+                                                onChange={(e) => update('morning_hours_from', e.target.value)}>
+                                            {Array.from({ length: 24 }, (_, h) => [`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`]).flat().map(t => (
+                                                <option key={t} value={t}>{t}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <span className="text-amber-400 mt-5">—</span>
+                                    <div className="flex-1">
+                                        <label className="block text-xs text-amber-600 mb-1">До</label>
+                                        <select className="input h-9 text-sm" value={form.morning_hours_to || '10:00'}
+                                                onChange={(e) => update('morning_hours_to', e.target.value)}>
+                                            {Array.from({ length: 24 }, (_, h) => [`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`]).flat().map(t => (
+                                                <option key={t} value={t}>{t}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <p className="text-[11px] text-amber-500">В это время: доставка бесплатная, адрес только из списка офисов</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2">
@@ -285,6 +356,39 @@ const BranchesPage = () => {
                 </div>
                 <button onClick={saveCategories} className="btn-primary text-sm w-full">Сохранить привязки</button>
             </Modal>
+
+
+
+            {/* Item Overrides Modal */}
+            <Modal isOpen={!!overridesModal} onClose={() => setOverridesModal(null)} title="Блюда филиала (оверрайды)" wide>
+                <p className="text-xs text-slate-400 mb-4">Пустые поля = базовые значения. Заполните чтобы изменить цену или статус для этого филиала.</p>
+                <div className="max-h-[400px] overflow-y-auto space-y-2">
+                    {overrideItems.map(item => (
+                        <div key={item.item_id} className={clsx(
+                            'flex items-center gap-3 p-3 rounded-xl text-sm',
+                            (item.override_price || item.override_status) ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'
+                        )}>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-slate-700 truncate">{item.name_ru}</p>
+                                <p className="text-xs text-slate-400">{item.category_name} · Базовая: {item.base_price} сом · {item.base_status}</p>
+                            </div>
+                            <input className="input w-24 h-8 text-xs text-center" type="number" placeholder={item.base_price}
+                                   value={item.override_price ?? ''} onChange={(e) => updateOverride(item.item_id, 'price', e.target.value)} />
+                            <select className="input w-32 h-8 text-xs"
+                                    value={item.override_status || ''} onChange={(e) => updateOverride(item.item_id, 'status', e.target.value)}>
+                                <option value="">Базовый</option>
+                                <option value="available">Доступно</option>
+                                <option value="out_of_stock">Нет в наличии</option>
+                                <option value="hidden">Скрыто</option>
+                            </select>
+                        </div>
+                    ))}
+                </div>
+                <button onClick={handleSaveOverrides} className="btn-primary text-sm w-full mt-4" disabled={savingOverrides}>
+                    {savingOverrides ? 'Сохранение...' : 'Сохранить оверрайды'}
+                </button>
+            </Modal>
+
 
             <ConfirmDialog isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete}
                            message="Все заказы и офисные адреса этого филиала будут удалены. Продолжить?" />

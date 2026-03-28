@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, DollarSign, ShoppingBag, Power, Loader2, CheckCircle } from 'lucide-react';
+import { Store, Globe, Phone, Mail, MessageCircle, FileText, Loader2, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Spinner } from '../components/ui';
-import {clsx} from "clsx";
 
 const SettingsPage = () => {
     const [settings, setSettings] = useState(null);
@@ -12,7 +11,7 @@ const SettingsPage = () => {
 
     useEffect(() => {
         api.get('/admin/settings').then(({ data }) => setSettings(data.data))
-            .catch(() => setSettings({ delivery_fee: 150, min_order_amount: 0, working_hours_from: '10:00', working_hours_to: '23:00', is_open: true }))
+            .catch(() => setSettings({ restaurant_name: 'Food Delivery', currency: 'сом' }))
             .finally(() => setLoading(false));
     }, []);
 
@@ -38,91 +37,87 @@ const SettingsPage = () => {
         <div className="max-w-2xl">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-800">Настройки ресторана</h1>
-                <p className="text-sm text-slate-400 mt-1">Доставка, минимальный заказ, время работы</p>
+                <p className="text-sm text-slate-400 mt-1">Глобальные настройки бренда и контакты</p>
             </div>
 
+            {/* Brand */}
             <div className="card p-6 mb-6">
-                <label className="flex items-center justify-between cursor-pointer">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl ${settings.is_open ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
-                            <Power size={20} />
+                <div className="flex items-center gap-2 mb-4">
+                    <Store size={18} className="text-slate-500" />
+                    <h3 className="font-semibold text-slate-700">Бренд</h3>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-600 mb-1.5">Название ресторана</label>
+                        <input className="input" value={settings.restaurant_name || ''} onChange={(e) => update('restaurant_name', e.target.value)}
+                               placeholder="Food Delivery" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-600 mb-1.5">URL логотипа</label>
+                        <input className="input" value={settings.logo_url || ''} onChange={(e) => update('logo_url', e.target.value)}
+                               placeholder="https://example.com/logo.png" />
+                        {settings.logo_url && (
+                            <div className="mt-2 p-3 bg-slate-50 rounded-xl flex items-center gap-3">
+                                <img src={settings.logo_url} alt="Logo" className="w-12 h-12 rounded-xl object-cover" onError={(e) => e.target.style.display = 'none'} />
+                                <span className="text-xs text-slate-400">Превью логотипа</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Currency */}
+            <div className="card p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Globe size={18} className="text-slate-500" />
+                    <h3 className="font-semibold text-slate-700">Валюта</h3>
+                </div>
+                <div className="flex gap-2">
+                    {['сом'].map(c => (
+                        <button key={c} onClick={() => update('currency', c)}
+                                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${settings.currency === c ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            {c}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Contacts */}
+            <div className="card p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Phone size={18} className="text-slate-500" />
+                    <h3 className="font-semibold text-slate-700">Контакты</h3>
+                </div>
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">Телефон</label>
+                            <input className="input" value={settings.contact_phone || ''} onChange={(e) => update('contact_phone', e.target.value)}
+                                   placeholder="+996 555 123 456" />
                         </div>
                         <div>
-                            <p className="font-semibold text-slate-700">Ресторан {settings.is_open ? 'открыт' : 'закрыт'}</p>
-                            <p className="text-xs text-slate-400">Когда закрыт — заказы и добавление в корзину заблокированы</p>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
+                            <input className="input" value={settings.contact_email || ''} onChange={(e) => update('contact_email', e.target.value)}
+                                   placeholder="info@food.kg" />
                         </div>
                     </div>
-                    <div className="relative">
-                        <input type="checkbox" checked={settings.is_open} onChange={(e) => update('is_open', e.target.checked)} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-slate-300 peer-checked:bg-emerald-500 rounded-full transition-colors" />
-                        <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform" />
+                    <div>
+                        <label className="block text-sm font-medium text-slate-600 mb-1.5">Telegram канал</label>
+                        <input className="input" value={settings.telegram_channel || ''} onChange={(e) => update('telegram_channel', e.target.value)}
+                               placeholder="@food_delivery_kg" />
                     </div>
-                </label>
+                </div>
             </div>
 
+            {/* About */}
             <div className="card p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <Clock size={18} className="text-slate-500" />
-                        <h3 className="font-semibold text-slate-700">Время работы</h3>
-                    </div>
-                    <button
-                        onClick={() => {
-                            update('working_hours_from', '00:00');
-                            update('working_hours_to', '23:59');
-                        }}
-                        className={clsx(
-                            'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-                            settings.working_hours_from === '00:00' && settings.working_hours_to === '23:59'
-                                ? 'bg-brand-500 text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        )}
-                    >
-                        24/7
-                    </button>
+                <div className="flex items-center gap-2 mb-4">
+                    <FileText size={18} className="text-slate-500" />
+                    <h3 className="font-semibold text-slate-700">О ресторане</h3>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-slate-600 mb-1.5">Открытие</label>
-                        <select className="input" value={settings.working_hours_from} onChange={(e) => update('working_hours_from', e.target.value)}>
-                            {Array.from({ length: 24 }, (_, h) => [`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`]).flat().map(t => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <span className="text-slate-400 mt-6">—</span>
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-slate-600 mb-1.5">Закрытие</label>
-                        <select className="input" value={settings.working_hours_to} onChange={(e) => update('working_hours_to', e.target.value)}>
-                            {Array.from({ length: 24 }, (_, h) => [`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`]).flat().map(t => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">
-                    {settings.working_hours_from === '00:00' && settings.working_hours_to === '23:59'
-                        ? 'Режим 24/7 — ресторан открыт круглосуточно'
-                        : 'Формат 24 часа. Например: 10:00 — 23:00'}
-                </p>
-            </div>
-
-            <div className="card p-6 mb-6">
-                <div className="flex items-center gap-2 mb-4"><DollarSign size={18} className="text-slate-500" /><h3 className="font-semibold text-slate-700">Стоимость доставки</h3></div>
-                <div className="relative">
-                    <input type="number" className="input pr-16" value={settings.delivery_fee} onChange={(e) => update('delivery_fee', parseInt(e.target.value) || 0)} />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">сом</span>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">0 = бесплатная доставка</p>
-            </div>
-
-            <div className="card p-6 mb-6">
-                <div className="flex items-center gap-2 mb-4"><ShoppingBag size={18} className="text-slate-500" /><h3 className="font-semibold text-slate-700">Минимальный заказ</h3></div>
-                <div className="relative">
-                    <input type="number" className="input pr-16" value={settings.min_order_amount} onChange={(e) => update('min_order_amount', parseInt(e.target.value) || 0)} />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">сом</span>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">0 = без ограничения</p>
+                <textarea className="input h-28 py-3 resize-none" value={settings.about_text || ''} onChange={(e) => update('about_text', e.target.value)}
+                          placeholder="Короткое описание для клиентов..." />
+                <p className="text-xs text-slate-400 mt-2">Отображается в Mini App</p>
             </div>
 
             <button onClick={handleSave} className="btn-primary text-sm" disabled={saving}>
