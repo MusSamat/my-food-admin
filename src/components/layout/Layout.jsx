@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, UtensilsCrossed, FolderOpen, ShoppingBag, Building2, Ticket,
-    Printer, LogOut, ChefHat, Users, Settings, GitBranch, UserCog
+    Printer, LogOut, ChefHat, Users, Settings, GitBranch, UserCog, MapPin
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import useAuthStore from '../../stores/authStore';
@@ -19,6 +19,7 @@ const NAV = [
     { to: '/users', icon: Users, label: 'Пользователи' },
     { to: '/branches', icon: GitBranch, label: 'Филиалы' },
     { to: '/admins', icon: UserCog, label: 'Админы', superadminOnly: true },
+    { to: '/zones', icon: MapPin, label: 'Зоны доставки' },
     { to: '/settings', icon: Settings, label: 'Настройки' },
     { to: '/printer', icon: Printer, label: 'Принтер' },
 ];

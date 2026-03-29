@@ -15,6 +15,7 @@ import UsersPage from "./pages/UsersPage";
 import SettingsPage from './pages/SettingsPage';
 import BranchesPage from './pages/BranchesPage';
 import AdminsPage from './pages/AdminsPage';
+import DeliveryZonesPage from './pages/DeliveryZonesPage';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useAuthStore();
@@ -61,6 +62,7 @@ const App = () => {
                     <Route path="users" element={<UsersPage />} />
                     <Route path="branches" element={<BranchesPage />} />
                     <Route path="admins" element={<AdminsPage />} />
+                    <Route path="zones" element={<DeliveryZonesPage />} />
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="printer" element={<PrinterPage />} />
                 </Route>

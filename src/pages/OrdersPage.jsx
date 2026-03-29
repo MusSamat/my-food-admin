@@ -6,6 +6,7 @@ import { getOrders, getOrder, updateOrderStatus, getKitchenReceipt, getClientRec
 import { Modal, StatusBadge, Spinner, EmptyState } from '../components/ui';
 import useAuthStore from '../stores/authStore';
 import useAdminBranchStore from '../stores/branchStore';
+import { joinAdmin, onNewOrder, onOrderUpdated } from '../services/socket';
 
 const STATUS_FLOW = ['paid', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled'];
 const STATUS_LABELS = { pending_payment: 'Ожидает оплаты', paid: 'Оплачен', preparing: 'Готовится', ready: 'Готов', delivering: 'В пути', delivered: 'Доставлен', cancelled: 'Отменён' };
@@ -38,6 +39,7 @@ const useOrderSound = (orders) => {
     useEffect(() => {
         if (!audioRef.current) audioRef.current = new Audio('/new-order.mp3');
     }, []);
+
     useEffect(() => {
         if (lastCount === null) { setLastCount(orders.length); return; }
         if (orders.length > lastCount) {
@@ -86,13 +88,37 @@ const OrdersPage = () => {
 
     useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-    // Auto-refresh
+// ─── WebSocket: real-time updates instead of polling ───
     useEffect(() => {
+        // Join admin room
+        joinAdmin(isSuperadmin ? selectedBranchId : admin?.branch_id);
+
+        // New order → re-fetch + sound
+        const unsubNew = onNewOrder(() => {
+            getOrders(buildParams()).then(({ data }) => {
+                setOrders(data.data);
+                setPagination(data.pagination);
+            }).catch(() => {});
+        });
+
+        // Order status changed → re-fetch silently
+        const unsubUpdate = onOrderUpdated(() => {
+            getOrders(buildParams()).then(({ data }) => {
+                setOrders(data.data);
+                setPagination(data.pagination);
+            }).catch(() => {});
+        });
+
+        // Fallback polling every 30s (in case WS disconnects)
         const interval = setInterval(() => {
-            getOrders(buildParams()).then(({ data }) => { setOrders(data.data); setPagination(data.pagination); }).catch(() => {});
-        }, 10000);
-        return () => clearInterval(interval);
-    }, [buildParams]);
+            getOrders(buildParams()).then(({ data }) => {
+                setOrders(data.data);
+                setPagination(data.pagination);
+            }).catch(() => {});
+        }, 30000);
+
+        return () => { unsubNew(); unsubUpdate(); clearInterval(interval); };
+    }, [buildParams, selectedBranchId]);
 
     const updateFilter = (f, v) => setFilters(prev => ({ ...prev, [f]: v, page: 1 }));
     const applyPreset = (p) => { setActivePreset(p); setFilters(f => ({ ...f, ...getDatePreset(p), page: 1 })); };

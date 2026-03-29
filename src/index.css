@@ -51,3 +51,15 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Fix Leaflet z-index conflict with modals */
+.leaflet-container {
+    z-index: 0 !important;
+}
+.leaflet-pane {
+    z-index: 0 !important;
+}
+.leaflet-top,
+.leaflet-bottom {
+    z-index: 1 !important;
+}
